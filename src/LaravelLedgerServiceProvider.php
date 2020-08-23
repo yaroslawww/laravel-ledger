@@ -1,0 +1,39 @@
+<?php
+
+namespace LaravelLedger;
+
+use Illuminate\Support\ServiceProvider;
+use LaravelLedger\Commands\RegenerateBalanceCommand;
+
+class LaravelLedgerServiceProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../config/laravel-ledger.php' => config_path('laravel-ledger.php'),
+            ], 'config');
+
+            $this->publishes([
+                __DIR__.'/../resources/views' => base_path('resources/views/vendor/laravel-ledger'),
+            ], 'views');
+
+            if (! class_exists('CreatePackageTable')) {
+                $this->publishes([
+                    __DIR__ . '/../database/migrations/create_laravel_ledger_table.php.stub' => database_path('migrations/' . date('Y_m_d_His', time()) . '_create_laravel_ledger_table.php'),
+                ], 'migrations');
+            }
+
+            $this->commands([
+                RegenerateBalanceCommand::class,
+            ]);
+        }
+
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'laravel-ledger');
+    }
+
+    public function register()
+    {
+        $this->mergeConfigFrom(__DIR__.'/../config/laravel-ledger.php', 'laravel-ledger');
+    }
+}
